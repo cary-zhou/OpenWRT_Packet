@@ -1,94 +1,48 @@
-#
-# Copyright (C) 2019 Xingwang Liao
-#
-# This is free software, licensed under the GNU General Public License v2.
-# See /LICENSE for more information.
-#
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=kcptun
 PKG_VERSION:=20190109
-PKG_RELEASE:=2
-
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/xtaci/kcptun/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=2e6e8ba4d9ca4f2e4d108c5731e4ba71953555dc25bce4cf09cd6d50cc2dc4a2
+PKG_RELEASE:=1
 
 PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE.md
-PKG_MAINTAINER:=Xingwang Liao <kuoruan@gmail.com>
+PKG_LICENSE_FILES:=LICENSE
 
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-
-GO_PKG:=github.com/xtaci/kcptun
+#kcptun-linux-386-20190109.tar.gz
+PKG_SOURCE:=$(PKG_NAME)-linux-386-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://github.com/xtaci/kcptun/releases/download/v$(PKG_VERSION)
+PKG_MD5SUM:=847b2283d86afa728055927b696169003d89b05b
+PKG_CAT:=zcat
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-define Package/kcptun/Default
-  TITLE:=Simple UDP Tunnel Based On KCP
-  URL:=https://github.com/xtaci/kcptun
+define Package/kcptun
+	SECTION:=net
+	CATEGORY:=Network
+	TITLE:=An extremely simple udp tunnel based on KCP
+	URL:=https://github.com/xtaci/kcptun
 endef
 
-define Package/kcptun/Default/description
-A Stable & Secure Tunnel Based On KCP with N:M Multiplexing.
+define Package/kcptun/description
+An extremely simple udp tunnel based on KCP.
 endef
 
-define kcptun/templates
-  define Package/kcptun-$(1)
-  $$(call Package/kcptun/Default)
-    TITLE+= ($(1))
-    USERID:=kcptun=12900:kcptun=12900
-    SECTION:=net
-    CATEGORY:=Network
-    SUBMENU:=Web Servers/Proxies
-    DEPENDS:=$$(GO_ARCH_DEPENDS)
-  endef
-
-  define Package/kcptun-$(1)/description
-  $(call Package/kcptun/Default/description)
-
-  This package contains the kcptun $(1).
-  endef
-
-  define Package/kcptun-$(1)/install
-	$$(INSTALL_DIR) $$(1)/usr/bin
-	$$(INSTALL_BIN) $$(GO_PKG_BUILD_BIN_DIR)/$(1) $$(1)/usr/bin/kcptun-$(1)
-  endef
+define Build/Compile
 endef
 
-define Package/golang-github-xtaci-kcptun-dev
-$(call Package/kcptun/Default)
-$(call GoPackage/GoSubMenu)
-  TITLE+= (source files)
-  DEPENDS+= \
-    +golang-golang-x-crypto-dev \
-    +golang-github-golang-snappy-dev \
-    +golang-github-pkg-errors-dev \
-    +golang-github-urfave-cli-dev \
-    +golang-github-xtaci-kcp-go-dev \
-    +golang-github-xtaci-smux-dev
-  PKGARCH:=all
+define Package/kcptun/postinst
 endef
 
-define Package/golang-github-xtaci-kcptun-dev/description
-$(call Package/kcptun/Default/description)
-
-This package provides the source files for the kcptun client/server.
+define Package/kcptun/conffiles
+/etc/config/kcptun
 endef
 
-TARGET_LDFLAGS+=' '-s' -X main.VERSION=$(PKG_VERSION)-$(PKG_RELEASE)_OpenWrt '-w
+define Package/kcptun/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_DATA) ./files/etc/config/kcptun $(1)/etc/config/kcptun
+	$(INSTALL_BIN) ./files/etc/init.d/kcptun $(1)/etc/init.d/kcptun
+	$(INSTALL_BIN) $(BUILD_DIR)/client_linux_arm7 $(1)/usr/bin/kcptun
+endef
 
-KCPTUN_COMPONENTS:=client server
-
-$(foreach component,$(KCPTUN_COMPONENTS), \
-  $(eval $(call kcptun/templates,$(component))) \
-  $(eval $(call GoBinPackage,kcptun-$(component))) \
-  $(eval $(call BuildPackage,kcptun-$(component))) \
-)
-
-$(eval $(call GoSrcPackage,golang-github-xtaci-kcptun-dev))
-$(eval $(call BuildPackage,golang-github-xtaci-kcptun-dev))
+$(eval $(call BuildPackage,kcptun))
