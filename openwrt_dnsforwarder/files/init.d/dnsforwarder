@@ -6,7 +6,8 @@ DNSFORWARDER_CONF=/etc/dnsforwarder/dnsforwarder.conf
 PID_PATH=/var/run/dnsforwarder/
 PID_FILE=dns.pid
 
-start(){
+start()
+{
 	echo luci for dnsforwarder
 	local vt_enabled=`uci get dnsforwarder.@arguments[0].enabled 2>/dev/null`
 	if [ $vt_enabled = 0 ]; then
@@ -38,6 +39,7 @@ start(){
 		iptables -t nat -A DNSFORWARDER -p udp --dport 53 -j REDIRECT --to-ports $port
 		iptables -t nat -I PREROUTING -j DNSFORWARDER
 	fi
+
 	mkdir -p /tmp/dnsmasq.d
 	mkdir -p /etc/dnsmasq.d
 	cat > /tmp/dnsmasq.d/dnsmasq-go.conf <<EOF
@@ -46,6 +48,7 @@ EOF
 	cat > /etc/dnsmasq.d/dnsmasq-go.conf <<EOF
 conf-dir=/var/etc/dnsmasq-go.d
 EOF
+
 	if [ $ipset = 1 ]; then
 		ipset destroy $ipset_name 2>/dev/null
 		ipset create $ipset_name hash:net family inet hashsize 1024 maxelem 65536
@@ -74,11 +77,14 @@ EOF
 			gfw_user)
 				awk -vs=$addr '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 				/etc/dnsforwarder/china-banned > /var/etc/dnsmasq-go.d/01-pollution.conf
+
 				awk -vs=$addr '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 				/etc/dnsforwarder/userlist >> /var/etc/dnsmasq-go.d/02-user.conf
+				
 				[ $ipset = 1 ] && {
 					awk '!/^$/&&!/^#/{printf("ipset=/%s/'$ipset_name'\n",$0)}' \
 					/etc/dnsforwarder/china-banned > /var/etc/dnsmasq-go.d/01-ipset.conf
+
 					awk '!/^$/&&!/^#/{printf("ipset=/%s/'$ipset_name'\n",$0)}' \
 					/etc/dnsforwarder/userlist > /var/etc/dnsmasq-go.d/02-ipset.conf
 				}
@@ -90,29 +96,39 @@ EOF
 				uci set dhcp.@dnsmasq[0].noresolv=1
 				uci commit dhcp
 				;;
+
 		esac
+		
 		[ "$mode" = "gfwlist" ] || [ "$mode" = "userlist" ] || [ "$mode" = "gfw_user" ] && {
 			iptables -t nat -A DNSFORWARDER -p udp --dport 53 -j REDIRECT --to-ports 53
 			iptables -t nat -I PREROUTING -j DNSFORWARDER
 		}
+		
 		if [ $white = 1 ]; then
 			logger -t alex enable white list
 			echo enable white list
 			[ -z "$whiteset" ] && whiteset="whiteset"
-			[ -n "$whitedns" ] && [ -f "/etc/dnsforwarder/whitelist" ] && {
+			[ -n "$whitedns" ] && [ -f "/etc/dnsforwarder/whitelist" ] && { #强制不走代理到DNSMasq
 					echo whiteset is $whiteset
 					ipset create $whiteset hash:net family inet hashsize 1024 maxelem 65536
+					
 					awk '!/^$/&&!/^#/{printf("ipset=/%s/'$whiteset'\n",$0)}' \
 					/etc/dnsforwarder/whitelist > /var/etc/dnsmasq-go.d/03-ipset.conf
+					
 					awk -vs=$whitedns '!/^$/&&!/^#/{printf("server=/%s/%s\n",$0,s)}' \
 					/etc/dnsforwarder/whitelist >> /var/etc/dnsmasq-go.d/03-white.conf
 			}
 		fi
+		
 		/etc/init.d/dnsmasq restart
+
 	fi
+
+	
 }
 
-stop(){
+stop()
+{
 	logger -t alex stopping dnsforwarder
 	local addr=`uci get dnsforwarder.@arguments[0].addr 2>/dev/null`
 	addr=${addr/:/#}
@@ -146,7 +162,9 @@ stop(){
 	/etc/init.d/dnsmasq restart
 }
 
-restart(){
+restart()
+{
+	
 	pid=`cat $PID_PATH/$PID_FILE 2>/dev/null`
 	echo dnsforwarder pid file is $pid
 	[ -n "$pid" ] && {
@@ -167,9 +185,12 @@ restart(){
 		} || {
 			logger -t alex dnsforwarder is not running	
 		}
+
 		logger -t alex restarting dnsforwarder
 		start
 	else
 		/etc/init.d/dnsforwarder disable
 	fi
+
+
 }

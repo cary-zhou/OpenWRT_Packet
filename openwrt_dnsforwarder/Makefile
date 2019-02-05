@@ -18,12 +18,17 @@ PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/dnsforwarder
+define Package/$(PKG_NAME)/Default
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=Forwarding DNS queries on TCP transport
 	URL:=https://github.com/holmium/dnsforwarder.git
+	DEPENDS:=+libpthread +wget +ipset +coreutils +coreutils-base64
 endef
+
+Package/$(PKG_NAME) = $(Package/$(PKG_NAME)/Default)
+
+CONFIGURE_ARGS += --enable-downloader=wget
 
 define Package/dnsforwarder/description
 Forwarding DNS queries on TCP transport.
@@ -37,6 +42,7 @@ define Package/dnsforwarder/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_DIR) $(1)/etc/dnsforwarder
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dnsforwarder $(1)/usr/bin/dnsforwarder
 	$(INSTALL_DATA) ./files/config/dnsforwarder $(1)/etc/config/dnsforwarder
 	$(INSTALL_BIN) ./files/init.d/dnsforwarder $(1)/etc/init.d/dnsforwarder
