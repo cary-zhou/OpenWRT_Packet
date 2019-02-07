@@ -4,9 +4,10 @@ PKG_NAME:=redsocks2
 PKG_VERSION:=0.67
 PKG_RELEASE=1
 
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/semigodking/redsocks.git
+PKG_SOURCE_VERSION:=53cad23a14afdd5f61a0542615beb7f4d98be728
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://github.com/semigodking/redsocks/archive/release-$(PKG_VERSION).tar.gz
-PKG_MD5SUM:=53cad23a14afdd5f61a0542615beb7f4d98be728
 
 PKG_LICENSE:=GPLv2
 PKG_LICENSE_FILES:=LICENSE
@@ -21,8 +22,12 @@ define Package/redsocks2
 	CATEGORY:=Network
 	TITLE:=Redirect any TCP connection to a SOCKS or HTTPS proxy server
 	URL:=https://github.com/semigodking/redsocks
-	DEPENDS:=+libevent2
+	DEPENDS:=+libevent2 +libopenssl
 endef
+
+define Package/redsocks2/Compile
+    $(MAKE) ENABLE_STATIC=true
+endif
 
 define Package/redsocks2/description
 This is a modified version of original redsocks. \
