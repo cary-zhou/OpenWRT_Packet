@@ -2,41 +2,46 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=redsocks2
 PKG_VERSION:=0.67
-PKG_RELEASE=1
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
+PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
 PKG_SOURCE_URL:=https://github.com/semigodking/redsocks.git
 PKG_SOURCE_VERSION:=53cad23a14afdd5f61a0542615beb7f4d98be728
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 
 PKG_LICENSE:=GPLv2
 PKG_LICENSE_FILES:=LICENSE
-PKG_MAINTAINER:=semigodking
+PKG_MAINTAINER:=Zhuofei Wang <SemigodKing@gmail.com>
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 
-define Package/redsocks2
+define Package/redsocks2/Default
 	SECTION:=net
 	CATEGORY:=Network
-	TITLE:=Redirect any TCP connection to a SOCKS or HTTPS proxy server
+	TITLE:=TCP to SOCKS or HTTPS proxy server $(2)
 	URL:=https://github.com/semigodking/redsocks
-	DEPENDS:=+libevent2 +libopenssl
+	VARIANT:=$(1)
+	DEPENDS:=$(3)
 endef
 
-define Package/redsocks2/Compile
-    $(MAKE) ENABLE_STATIC=true
-endif
+Package/redsocks2-openssl = $(call Package/redsocks2/Default,openssl,(OpenSSL),+libevent2 +libopenssl)
 
 define Package/redsocks2/description
+Redirect any TCP connection to a SOCKS or HTTPS proxy server. \
 This is a modified version of original redsocks. \
+The name is changed to be REDSOCKS2 since this release to distinguish with original redsocks. \
 This variant is useful for anti-GFW (Great Fire Wall).
 endef
 
 define Package/redsocks2/conffiles
 /etc/config/redsocks2
 endef
+
+Package/redsocks2-openssl/description = $(Package/redsocks2/description)
+Package/redsocks2-openssl/conffiles = $(Package/redsocks2/conffiles)
 
 define Package/redsocks2/install
 	$(INSTALL_DIR) $(1)/usr/bin
@@ -49,4 +54,6 @@ define Package/redsocks2/install
 	$(INSTALL_DATA) ./files/redsocks2.template $(1)/etc/redsocks2/config.template
 endef
 
-$(eval $(call BuildPackage,redsocks2))
+Package/redsocks2-openssl/install = $(Package/redsocks2/install)
+
+$(eval $(call BuildPackage,redsocks2-openssl))
