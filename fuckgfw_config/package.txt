@@ -1,0 +1,3 @@
+shadowsocks——ssr-local
+ipt_redirect
+redsocks

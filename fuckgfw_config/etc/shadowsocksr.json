@@ -1,0 +1,13 @@
+{
+    "server": "45.78.73.11",
+    "server_port": 24680,
+    "timeout": 120,
+    "password": "1q2w3e4r",
+    "method": "none",
+    "protocol": "auth_chain_a",
+    "protocol_param": "",
+    "obfs": "tls1.2_ticket_auth",
+    "obfs_param": "",
+    "dns_ipv6": false,
+    "fast_open": false
+}

@@ -1,0 +1,29 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2007 OpenWrt.org
+
+START=90
+
+[ -e "/etc/redsocks.conf" ] || exit 0
+
+start() {
+	if [ -e "/var/run/redsocks.pid" ]; then
+		pid=$(cat /var/run/redsocks.pid)
+		echo "redsocks is already running as pid: $pid"
+		exit 0
+	fi
+	echo -n "startup redsocks ..."
+	/usr/sbin/redsocks -c /etc/redsocks.conf -p /var/run/redsocks.pid
+	echo " done"
+}
+
+stop() {
+	if [ ! -e "/var/run/redsocks.pid" ]; then
+		echo "redsocks is not running"
+		exit 1
+	fi
+	pid=`cat /var/run/redsocks.pid`
+	echo -n stopping redsocks as pid: $pid
+	/bin/kill $pid
+	rm /var/run/redsocks.pid
+	echo " done"
+}
