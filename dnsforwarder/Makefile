@@ -23,7 +23,7 @@ define Package/$(PKG_NAME)/Default
 	CATEGORY:=Network
 	TITLE:=Forwarding DNS queries on TCP transport
 	URL:=https://github.com/holmium/dnsforwarder.git
-	DEPENDS:=+libpthread +wget +ipset +coreutils +coreutils-base64
+	DEPENDS:=+libpthread +wget
 endef
 
 Package/$(PKG_NAME) = $(Package/$(PKG_NAME)/Default)
