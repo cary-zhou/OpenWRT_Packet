@@ -29,7 +29,7 @@ del_ipt_redir() {
 }
 
 start() {
-	service_start /usr/bin/ssr-local -c $CONFIG -b 0.0.0.0 -l 1088 -u -f $PIDFILE
+	ulimit -n 65535;service_start /usr/bin/ssr-local -c $CONFIG -b 0.0.0.0 -l 1088 -u -f $PIDFILE
 	set_ssr_chain
 	set_ipt_redir
 }

@@ -1,0 +1,42 @@
+#!/bin/sh /etc/rc.common
+
+START=97
+
+DNSFORWARDER_CONF=/etc/dnsforwarder/dnsforwarder.conf
+PID_FILE=dnsforwarder.pid
+PID_PATH=/var/run/
+
+start(){
+	dnsforwarder -f $DNSFORWARDER_CONF -d
+	mkdir -p $PID_PATH
+	pid=`ps | awk '$5 ~ /\[dnsforwarder\]/ {print $1}'`
+	if [ -n $pid ] && [ $pid -gt "1" ]; then
+	{
+		echo dnsforwarder running pid: $pid
+		echo $pid > $PID_PATH/$PID_FILE
+	}
+	else
+	{
+		echo dnsforwarder startup failed!
+	}
+	fi
+}
+
+stop(){
+	[ -e $PID_PATH/$PID_FILE ] && {
+		pid=`cat $PID_PATH/$PID_FILE`
+		if [ -n $pid ] && [ $pid -gt "1" ]; then
+		{
+			echo killing dnsforwarder pid: $pid
+			kill -9 $pid
+		}
+		else
+		{
+			echo dnsforwarder not running!
+		}
+		fi
+		rm -f $PID_PATH/$PID_FILE
+	} || {
+		echo dnsforwarder not running!
+	}
+}

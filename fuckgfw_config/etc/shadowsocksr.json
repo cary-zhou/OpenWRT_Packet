@@ -1,8 +1,8 @@
 {
-    "server": "xxx.xxx.xxx.xxx",
+    "server": "45.78.73.11",
     "server_port": 24680,
     "timeout": 120,
-    "password": "password",
+    "password": "1q2w3e4r",
     "method": "none",
     "protocol": "auth_chain_a",
     "protocol_param": "",
