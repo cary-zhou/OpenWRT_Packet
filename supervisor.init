@@ -1,0 +1,54 @@
+#!/bin/sh /etc/rc.common
+
+DAEMON=/usr/bin/supervisord
+NAME=supervisord
+DESC=supervisor
+
+set -e
+test -x $DAEMON || exit 0
+
+PIDFILE=/var/run/$NAME.pid
+
+DAEMON_OPTS="-c /etc/supervisor/supervisord.conf -j $PIDFILE"
+
+check_pid() {
+    pid=$1
+    name=$2
+    [ -z "$pid" ] && return 1
+    [ ! -d /proc/$pid ] && return 1
+    (cat /proc/$pid/cmdline | tr "\000" "\n"|grep -q $name) || return 1
+    return 0
+}
+
+running() {
+    [ ! -f "$PIDFILE" ] && return 1
+    pid=`cat $PIDFILE`
+    check_pid $pid $DAEMON || return 1
+    return 0
+}
+
+start() {
+	echo -n "Starting $DESC: "
+	service_start $DAEMON $DAEMON_OPTS
+	test -f $PIDFILE || usleep 50000
+		if running; then
+			echo "$NAME."
+		else
+			echo " ERROR."
+		fi
+}
+
+stop() {
+    [ ! -f "$PIDFILE" ] && return
+    if running; then
+		pid=`cat $PIDFILE`
+        kill -9 $pid
+		usleep 50000
+		if running; then
+			echo "Cannot kill $DAEMON (pid=$pid)!"
+			exit 1
+		fi
+    fi
+    rm -f $PIDFILE
+    return 0
+}
