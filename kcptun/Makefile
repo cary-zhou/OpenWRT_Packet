@@ -4,13 +4,25 @@ PKG_NAME:=kcptun
 PKG_VERSION:=20190109
 PKG_RELEASE:=1
 
-PKG_LICENSE:=MIT
-PKG_LICENSE_FILES:=LICENSE
+ifeq ($(ARCH),x86_64)
+	PKG_ARCH_KCPTUN:=amd64
+endif
+ifeq ($(ARCH),mipsel)
+	PKG_ARCH_KCPTUN:=mipsle
+endif
+ifeq ($(ARCH),mips)
+	PKG_ARCH_KCPTUN:=mips
+endif
+ifeq ($(ARCH),i386)
+	PKG_ARCH_KCPTUN:=386
+endif
+ifeq ($(ARCH),arm)
+	PKG_ARCH_KCPTUN:=arm
+endif
 
-#kcptun-linux-386-20190109.tar.gz
-PKG_SOURCE:=$(PKG_NAME)-linux-386-$(PKG_VERSION).tar.gz
+PKG_SOURCE:=$(PKG_NAME)-linux-$(PKG_ARCH_KCPTUN)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/xtaci/kcptun/releases/download/v$(PKG_VERSION)
-PKG_MD5SUM:=847b2283d86afa728055927b696169003d89b05b
+PKG_HASH:=skip
 PKG_CAT:=zcat
 
 include $(INCLUDE_DIR)/package.mk
