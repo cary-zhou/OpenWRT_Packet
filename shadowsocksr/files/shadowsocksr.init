@@ -1,21 +1,44 @@
 #!/bin/sh /etc/rc.common
 
-START=95
-
-SERVICE_USE_PID=1
-SERVICE_WRITE_PID=1
-SERVICE_DAEMONIZE=1
+START=99
 
 CONFIG=/etc/shadowsocksr.json
+PIDFILE=/var/run/shadowsocksr.pid
+
+set_ssr_chain() {
+	iptables -t nat -N SSR
+	[ $? != "0" ] && return
+	iptables -t nat -A SSR -d 10.0.0.0/8 -j RETURN
+	iptables -t nat -A SSR -d 100.64.0.0/10 -j RETURN
+	iptables -t nat -A SSR -d 127.0.0.0/8 -j RETURN
+	iptables -t nat -A SSR -d 169.254.0.0/16 -j RETURN
+	iptables -t nat -A SSR -d 172.16.0.0/12 -j RETURN
+	iptables -t nat -A SSR -d 192.168.0.0/16 -j RETURN
+	iptables -t nat -A SSR -d 224.0.0.0/4 -j RETURN
+	iptables -t nat -A SSR -d 240.0.0.0/4 -j RETURN
+	iptables -t nat -A SSR -m set --match-set fuckgfw dst -j RETURN
+	iptables -t nat -A SSR -p tcp -j REDIRECT --to-ports 1080
+}
+
+set_ipt_redir() {
+	iptables -t nat -A prerouting_rule -i br-lan -p tcp -j SSR
+}
+
+del_ipt_redir() {
+	iptables -t nat -D prerouting_rule -i br-lan -p tcp -j SSR
+}
 
 start() {
-	service_start /usr/bin/ssr-local -c $CONFIG
-	#service_start /usr/bin/ssr-redir -c $CONFIG
-	#service_start /usr/bin/ssr-tunnel -c $CONFIG -l 5353 -L 8.8.8.8:53 -U
+	service_start /usr/bin/ssr-local -c $CONFIG -b 0.0.0.0 -l 1088 -u -f $PIDFILE
+	cp -f /etc/gfwlist.conf /tmp/dnsmasq.d/gfwlist.conf
+	/etc/init.d/dnsmasq reload
+	set_ssr_chain
+	set_ipt_redir
 }
 
 stop() {
 	service_stop /usr/bin/ssr-local
-	#service_stop /usr/bin/ssr-redir
-	#service_stop /usr/bin/ssr-tunnel
+	rm -f /tmp/dnsmasq.d/gfwlist.conf
+	/etc/init.d/dnsmasq reload
+	del_ipt_redir
 }

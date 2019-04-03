@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 
-START=95
+START=99
 
 CONFIG=/etc/shadowsocksr.json
 PIDFILE=/var/run/shadowsocksr.pid
@@ -8,8 +8,8 @@ PIDFILE=/var/run/shadowsocksr.pid
 set_ssr_chain() {
 	iptables -t nat -N SSR
 	[ $? != "0" ] && return
-	iptables -t nat -A SSR -d 0.0.0.0/8 -j RETURN
 	iptables -t nat -A SSR -d 10.0.0.0/8 -j RETURN
+	iptables -t nat -A SSR -d 100.64.0.0/10 -j RETURN
 	iptables -t nat -A SSR -d 127.0.0.0/8 -j RETURN
 	iptables -t nat -A SSR -d 169.254.0.0/16 -j RETURN
 	iptables -t nat -A SSR -d 172.16.0.0/12 -j RETURN
@@ -29,12 +29,16 @@ del_ipt_redir() {
 }
 
 start() {
-	ulimit -n 65535;service_start /usr/bin/ssr-local -c $CONFIG -b 0.0.0.0 -l 1088 -u -f $PIDFILE
+	service_start /usr/bin/ssr-local -c $CONFIG -b 0.0.0.0 -l 1088 -u -f $PIDFILE
+	cp -f /etc/gfwlist.conf /tmp/dnsmasq.d/gfwlist.conf
+	/etc/init.d/dnsmasq reload
 	set_ssr_chain
 	set_ipt_redir
 }
 
 stop() {
 	service_stop /usr/bin/ssr-local
+	rm -f /tmp/dnsmasq.d/gfwlist.conf
+	/etc/init.d/dnsmasq reload
 	del_ipt_redir
 }

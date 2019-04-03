@@ -1,42 +1,38 @@
 #!/bin/sh /etc/rc.common
 
-START=97
+START=99
 
 DNSFORWARDER_CONF=/etc/dnsforwarder/dnsforwarder.conf
-PID_FILE=dnsforwarder.pid
-PID_PATH=/var/run/
+PID_FILE=/var/run/dnsforwarder.pid
+
+chkpid(){
+    pid=$1
+    [ -z "$pid" ] && return 1
+    [ ! -d /proc/$pid ] && return 1
+    return 0
+}
 
 start(){
 	dnsforwarder -f $DNSFORWARDER_CONF -d
-	mkdir -p $PID_PATH
-	pid=`ps | awk '$5 ~ /\[dnsforwarder\]/ {print $1}'`
-	if [ -n $pid ] && [ $pid -gt "1" ]; then
-	{
-		echo dnsforwarder running pid: $pid
-		echo $pid > $PID_PATH/$PID_FILE
-	}
-	else
-	{
-		echo dnsforwarder startup failed!
-	}
-	fi
+	usleep 50000
+	pid=`ps|awk '$5 ~ /\[dnsforwarder\]/ {print $1}'`
+	chkpid $pid && echo $pid > $PID_FILE || echo "dnsforwarder startup failed!"
 }
 
 stop(){
-	[ -e $PID_PATH/$PID_FILE ] && {
-		pid=`cat $PID_PATH/$PID_FILE`
-		if [ -n $pid ] && [ $pid -gt "1" ]; then
-		{
-			echo killing dnsforwarder pid: $pid
-			kill -9 $pid
-		}
+	[ -e $PID_FILE ] || return 1
+	pid=`cat $PID_FILE`
+	[ -z "$pid" ] && return 1
+	if chkpid $pid; then
+        kill -9 $pid
+		usleep 50000
+		if chkpid $pid; then
+			echo "can't kill dnsforwarder pid: $pid!"
+			exit 1
 		else
-		{
-			echo dnsforwarder not running!
-		}
+			echo "killed dnsforwarder pid: $pid!"
 		fi
-		rm -f $PID_PATH/$PID_FILE
-	} || {
-		echo dnsforwarder not running!
-	}
+    fi
+    rm -f $PID_FILE
+    return 0
 }
