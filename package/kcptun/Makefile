@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=kcptun
-PKG_VERSION:=20190109
+PKG_VERSION:=20190418
 PKG_RELEASE:=1
 
 ifeq ($(ARCH),x86_64)
